@@ -6,7 +6,7 @@ This candidate integrates `cf-rust` at
 both master-only documentation commits. No browser/explorer frontend is introduced.
 `master` remains the upstream tracking branch; `dev` is the backend integration target.
 
-The new Backend integration workflow tests PRs to dev on macOS 15 ARM with Python
+The new Backend integration workflow tests PRs to dev on the current hosted macOS ARM image with Python
 3.13/3.14. Existing upstream workflows remain unchanged. This workflow does not
 publish packages or execute Windows/Linux qualification.
 
@@ -37,3 +37,13 @@ results retain their failures/skips and are not replaced by these bounded checks
 Windows qualification is on hold and Linux qualification is deferred. Default
 Corpora conversion remains Python; native TEI stays opt-in. No UI integration or
 production deployment is part of this candidate.
+
+## Revised macOS acceptance, November 3, 2026
+
+The user withdrew minimum macOS 15 qualification. The workflow now uses
+`macos-latest` while preserving ARM and Python 3.13/3.14 coverage and all test
+steps. Local macOS 27.0.1 ARM64 results remain explicitly local: 129 Rust,
+347 installed-engine (21 optional-corpus skips), 168 MCP and 56 benchmark
+tests passed after the six regression cases were added. The Python backend
+suite against the fixed engine passed 1103 tests with 39 skips. Earlier
+hosted capacity failures are not passes and do not certify any OS version.
