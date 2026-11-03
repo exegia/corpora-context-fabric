@@ -66,7 +66,18 @@ impl Fabric {
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let mut fabric = Self::new(path);
+        Self::from_locations_with_modules([path], modules)
+    }
+
+    /// Search every location/module combination, preserving their order.
+    pub fn from_locations_with_modules<I, P, J, S>(locations: I, modules: J) -> Self
+    where
+        I: IntoIterator<Item = P>,
+        P: AsRef<Path>,
+        J: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let mut fabric = Self::from_locations(locations);
         fabric.modules = modules
             .into_iter()
             .map(|module| module.as_ref().to_string())

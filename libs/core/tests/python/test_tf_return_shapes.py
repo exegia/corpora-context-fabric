@@ -170,3 +170,17 @@ def test_node_from_section_uses_the_first_three_parts(api):
 def test_unknown_computed_feature_is_none(api):
     assert api.Cs("nope") is None
     assert api.Cs("levels").data == api.C.levels.data
+
+
+@pytest.mark.parametrize("mode", LOAD_MODES)
+def test_all_missing_integer_edge_values_keep_valued_shapes(mini_corpus_with_otext, tmp_path, mode):
+    corpus = mini_corpus_with_otext()
+    (corpus / "missing.tf").write_text("@edge\n@edgeValues\n@valueType=int\n\n1\t2\t\n", encoding="utf-8")
+    api = open_corpus([corpus], mode, tmp_path, features="missing")
+    edge = api.E.missing
+    assert edge.doValues is True
+    _exact(edge.f(1), ((2, None),))
+    _exact(edge.t(2), ((1, None),))
+    _exact(edge.data, {1: {2: None}})
+    _exact(edge.dataInv, {2: {1: None}})
+    _exact(edge.freqList(), ((None, 1),))

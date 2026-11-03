@@ -758,7 +758,8 @@ fn loaded_info(
         let meta = file_meta
             .cloned()
             .or_else(|| Some(feature.metadata.clone()));
-        let values = name != OSLOTS && feature.edge_value_count > 0;
+        let values = name != OSLOTS
+            && (feature.metadata.contains_key("edgeValues") || feature.edge_value_count > 0);
         ("edge", meta, Some(values))
     } else if name
         .strip_prefix("__")

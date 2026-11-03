@@ -90,7 +90,9 @@ impl MappedCompiledCorpus {
             .edge_feature(feature_name)?
             .expect("metadata existence checked above");
         let levels = self.mapped_levels()?;
-        if feature_metadata.edge_value_count == 0 {
+        if !feature_metadata.metadata.contains_key("edgeValues")
+            && feature_metadata.edge_value_count == 0
+        {
             let mut count = 0_usize;
             for row_offset in feature.parts.row_offsets.iter(feature.bytes) {
                 let source = read_u32_from(feature.path, feature.bytes, row_offset)?;

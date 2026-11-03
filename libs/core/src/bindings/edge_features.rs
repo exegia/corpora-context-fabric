@@ -53,7 +53,9 @@ impl PyEdgeFeature {
         self.corpus
             .metadata()
             .edge_feature(&self.name)
-            .is_some_and(|feature| feature.edge_value_count > 0)
+            .is_some_and(|feature| {
+                feature.metadata.contains_key("edgeValues") || feature.edge_value_count > 0
+            })
     }
 
     fn nodes_to_tuple(&self, py: Python<'_>, nodes: Vec<u32>) -> PyResult<PyObject> {

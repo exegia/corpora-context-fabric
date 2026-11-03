@@ -21,6 +21,7 @@ pub(crate) struct EdgeParts {
     pub(crate) row_offsets: RowOffsets,
     lookup: RowLookup,
     edge_value_count: usize,
+    has_edge_values: bool,
     edge_values_start: Option<usize>,
     is_oslots: bool,
     reverse_index: ReverseEdgeLayout,
@@ -85,6 +86,8 @@ pub(crate) fn build_edge_parts(
         row_offsets,
         lookup: RowLookup::default(),
         edge_value_count: feature.edge_value_count,
+        has_edge_values: feature.metadata.contains_key("edgeValues")
+            || feature.edge_value_count > 0,
         edge_values_start: feature.edge_values_start,
         is_oslots: feature.name == "oslots",
         reverse_index: feature.reverse_index,
@@ -105,7 +108,7 @@ pub struct EdgeFeatureView<'a> {
 
 impl<'a> EdgeFeatureView<'a> {
     pub fn has_edge_values(&self) -> bool {
-        self.parts.edge_value_count > 0
+        self.parts.has_edge_values
     }
 
     /// Byte offset of `source`'s row, if it has one.

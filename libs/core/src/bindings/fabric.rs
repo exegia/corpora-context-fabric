@@ -258,11 +258,7 @@ impl PyFabric {
             .map(PathBuf::from)
             .collect::<Vec<_>>();
         let modules = strings_from_optional_python(modules)?.unwrap_or_else(|| vec![String::new()]);
-        let path = locations.first().cloned().unwrap_or_default();
-        let mut fabric = Fabric::with_modules(path, modules);
-        if locations.len() > 1 {
-            fabric = Fabric::from_locations(locations);
-        }
+        let fabric = Fabric::from_locations_with_modules(locations, modules);
         Ok(Self {
             inner: fabric,
             silent,

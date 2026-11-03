@@ -35,3 +35,27 @@ def test_later_location_overrides_earlier(mini_corpus_with_otext, tmp_path, mode
     api = open_corpus([base, override], mode, tmp_path)
     assert api.F.word.v(1) == "OVERRIDDEN"
     assert api.T.nodeFromSection(("S1", 1)) == 6
+
+
+@pytest.mark.parametrize("mode", LOAD_MODES)
+def test_multiple_locations_preserve_modules(mini_corpus_with_otext, tmp_path, mode):
+    from cfabric import Fabric
+
+    base = mini_corpus_with_otext(*SECTIONS)
+    override = _override_module(base, tmp_path)
+    base_root, extra_root = tmp_path / "base", tmp_path / "extra"
+    base_root.mkdir()
+    extra_root.mkdir()
+    base.rename(base_root / "tf")
+    override.rename(extra_root / "tf")
+    fabric = Fabric(locations=[str(base_root), str(extra_root)], modules=["tf"], silent="deep")
+    if mode == "openMapped":
+        cache = tmp_path / "modules.cfr"
+        assert fabric.compile(str(cache), None, "deep")
+        api = fabric.openMapped(str(cache))
+    elif mode == "load":
+        api = fabric.load("word", silent="deep")
+    else:
+        api = fabric.loadAll(silent="deep")
+    assert api.F.word.v(1) == "OVERRIDDEN"
+    assert api.T.nodeFromSection(("S1", 1)) == 6
