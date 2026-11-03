@@ -7,11 +7,8 @@ making them suitable for serialization and agent interaction via MCP.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from cfabric.core.api import Api
+from dataclasses import asdict, dataclass, field
+from typing import Any
 
 # Maximum slots for text extraction - nodes larger than this skip textification
 MAX_TEXT_SLOTS = 100
@@ -79,7 +76,7 @@ class NodeInfo:
     @classmethod
     def from_api(
         cls,
-        api: Api,
+        api: Any,
         node: int,
         include_text: bool = True,
         include_section: bool = True,
@@ -172,133 +169,6 @@ class NodeInfo:
 
 
 @dataclass
-class NodeList:
-    """A list of nodes with rich information.
-
-    Attributes:
-        nodes: List of NodeInfo objects
-        total_count: Total number of nodes (may differ from len(nodes) if limited)
-        query: Optional description of how nodes were obtained
-    """
-
-    nodes: list[NodeInfo] = field(default_factory=list)
-    total_count: int = 0
-    query: str | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to JSON-serializable dictionary."""
-        return {
-            "nodes": [n.to_dict() for n in self.nodes],
-            "total_count": self.total_count,
-            "query": self.query,
-        }
-
-    def to_json(self) -> str:
-        """Serialize to JSON string."""
-        return json.dumps(self.to_dict())
-
-    @classmethod
-    def from_nodes(
-        cls,
-        api: Api,
-        nodes: list[int] | tuple[int, ...],
-        limit: int | None = None,
-        query: str | None = None,
-        **node_kwargs: Any,
-    ) -> NodeList:
-        """Create NodeList from API and node IDs.
-
-        Parameters
-        ----------
-        api: Api
-            The Context Fabric API object
-        nodes: list[int] | tuple[int, ...]
-            The node IDs
-        limit: int | None
-            Maximum number of nodes to include (for pagination)
-        query: str | None
-            Description of how nodes were obtained
-        **node_kwargs:
-            Arguments passed to NodeInfo.from_api
-        """
-        total_count = len(nodes)
-        if limit is not None:
-            nodes = nodes[:limit]
-
-        node_infos = [NodeInfo.from_api(api, n, **node_kwargs) for n in nodes]
-
-        return cls(nodes=node_infos, total_count=total_count, query=query)
-
-
-@dataclass
-class SearchResult:
-    """Result of a search query.
-
-    Attributes:
-        results: List of result tuples, each tuple is a list of NodeInfo
-        total_count: Total number of results
-        template: The search template used
-        plan: Optional search plan description
-    """
-
-    results: list[list[NodeInfo]] = field(default_factory=list)
-    total_count: int = 0
-    template: str = ""
-    plan: str | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to JSON-serializable dictionary."""
-        return {
-            "results": [[n.to_dict() for n in r] for r in self.results],
-            "total_count": self.total_count,
-            "template": self.template,
-            "plan": self.plan,
-        }
-
-    def to_json(self) -> str:
-        """Serialize to JSON string."""
-        return json.dumps(self.to_dict())
-
-    @classmethod
-    def from_search(
-        cls,
-        api: Api,
-        results: tuple[tuple[int, ...], ...] | list[tuple[int, ...]],
-        template: str,
-        limit: int | None = None,
-        **node_kwargs: Any,
-    ) -> SearchResult:
-        """Create SearchResult from search results.
-
-        Parameters
-        ----------
-        api: Api
-            The Context Fabric API object
-        results: tuple[tuple[int, ...], ...]
-            Raw search results (tuples of node IDs)
-        template: str
-            The search template used
-        limit: int | None
-            Maximum number of results to include
-        **node_kwargs:
-            Arguments passed to NodeInfo.from_api
-        """
-        total_count = len(results)
-        if limit is not None:
-            results = results[:limit]
-
-        result_list = []
-        for tup in results:
-            result_list.append([NodeInfo.from_api(api, n, **node_kwargs) for n in tup])
-
-        return cls(
-            results=result_list,
-            total_count=total_count,
-            template=template,
-        )
-
-
-@dataclass
 class FeatureInfo:
     """Metadata about a feature.
 
@@ -335,7 +205,7 @@ class FeatureInfo:
     @classmethod
     def from_api(
         cls,
-        api: Api,
+        api: Any,
         name: str,
         kind: str,
     ) -> FeatureInfo | None:
@@ -350,30 +220,24 @@ class FeatureInfo:
         kind: str
             'node' or 'edge'
         """
-        CF = api.CF
-
-        # Get metadata from CF.features (populated for both .tf and .cfm loading)
-        fObj = CF.features.get(name)
-        if not fObj:
+        if kind == "node":
+            fobj = api.Fs(name, warn=False)
+        elif kind == "edge":
+            fobj = api.Es(name, warn=False)
+        else:
+            fobj = None
+        if not fobj:
             return None
 
-        meta = fObj.metaData or {}
-        # Handle both .tf format (valueType) and .cfm format (value_type)
-        value_type = meta.get("valueType", meta.get("value_type", ""))
-        description = meta.get("description", "")
-
-        # For edge features, check if they have values
         has_values = None
         if kind == "edge":
-            eobj = api.Es(name, warn=False)
-            if eobj:
-                has_values = eobj.doValues
+            has_values = bool(fobj.doValues)
 
         return cls(
             name=name,
             kind=kind,
-            value_type=value_type,
-            description=description,
+            value_type=getattr(fobj, "valueType", None) or "",
+            description=getattr(fobj, "description", None) or "",
             has_values=has_values,
         )
 
@@ -413,7 +277,7 @@ class CorpusInfo:
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_api(cls, api: Api, name: str, path: str) -> CorpusInfo:
+    def from_api(cls, api: Any, name: str, path: str) -> CorpusInfo:
         """Create CorpusInfo from API.
 
         Parameters
@@ -470,8 +334,6 @@ class CorpusInfo:
 
 __all__ = [
     "NodeInfo",
-    "NodeList",
-    "SearchResult",
     "FeatureInfo",
     "CorpusInfo",
 ]
