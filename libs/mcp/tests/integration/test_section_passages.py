@@ -1,18 +1,19 @@
-"""MCP passage lookup with explicitly selected features and a warm CFM cache."""
+"""MCP passage lookup with explicitly selected features and a warm compiled cache."""
 
 import shutil
-from pathlib import Path
 
 from cfabric import Fabric
 from cfabric_mcp import tools
 from cfabric_mcp.corpus_manager import corpus_manager
 
 
-def test_get_passages_after_selective_cfm_load(tmp_path):
-    fixture = Path(__file__).parents[1] / "fixtures" / "mini_corpus"
+def test_get_passages_after_selective_cfm_load(fixtures_dir, tmp_path):
+    fixture = fixtures_dir / "mini_corpus"
     corpus = tmp_path / "corpus"
-    shutil.copytree(fixture, corpus, ignore=shutil.ignore_patterns(".cfm", ".tf"))
-    assert Fabric(locations=str(corpus), silent="deep").compile()
+    shutil.copytree(fixture, corpus, ignore=shutil.ignore_patterns(".cf*", ".tf"))
+    # A full load writes the default compiled cache next to the sources.
+    Fabric(locations=str(corpus), silent="deep").loadAll(silent="deep")
+    assert (corpus / ".cfr").is_dir()
     name = "selective-section-regression"
     corpus_manager.load(str(corpus), name=name, features=["word"])
     try:
