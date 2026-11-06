@@ -215,7 +215,7 @@ impl MappedCompiledCorpus {
 
     /// Node ids of one type in ascending node order, served from a cache built
     /// by a single `otype` pass (u32 reads only) on first use. Unlike
-    /// [`nodes_of_type`](Self::nodes_of_type) (canonical rank order), this
+    /// `nodes_of_type` (canonical rank order), this
     /// preserves row order, matching a plain `otype.rows()` type scan.
     pub fn typed_nodes(&self, node_type: &str) -> Result<Option<Arc<Vec<u32>>>> {
         if let Some(by_type) = self.type_nodes_cache.get() {

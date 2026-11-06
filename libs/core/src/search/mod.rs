@@ -2,7 +2,7 @@
 //! the join.
 //!
 //! [`MappedSearch::prepare`] checks a template as Text-Fabric does (see
-//! [`check`]), plans it, and returns a [`PreparedSearch`] that produces the
+//! `check`), plans it, and returns a [`PreparedSearch`] that produces the
 //! matches on demand.
 
 mod candidates;
