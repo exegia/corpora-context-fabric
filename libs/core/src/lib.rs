@@ -7,7 +7,7 @@
 //!   the indexes, and writes a `.cfr` file.
 //! - [`index`]: the precomputed indexes (levels, `levUp`/`levDown`, boundary,
 //!   reverse edges, row offsets, sections, structure).
-//! - [`format`]: the `.cfr` file layout, reader and writer.
+//! - [`mod@format`]: the `.cfr` file layout, reader and writer.
 //! - [`cache`]: where compiled caches live and when they are fresh.
 //! - [`mapped`]: the query engine over a memory-mapped `.cfr` file.
 //! - [`search`]: search templates over the mapped engine.

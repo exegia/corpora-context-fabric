@@ -179,3 +179,21 @@ for building and testing, and the [changelog](https://github.com/Context-Fabric/
 ## License
 
 MIT License - see [LICENSE](https://github.com/Context-Fabric/context-fabric/blob/master/LICENSE) for details.
+
+## Cargo RC workflow
+
+`.github/workflows/cargo-crate.yml` verifies the Python-independent Rust crate
+`context_fabric_core` at Cargo version `0.6.0-rc.1` (Python `0.6.0rc1`). PRs and
+pushes into `dev` run formatting, Clippy, tests, docs and `cargo package`, then
+retain the verified `.crate` artifact. No Python interpreter is required by the
+crate's default feature set.
+
+For publishing, dispatch **Cargo crate** on `dev` with `publish=true` and the
+exact Cargo version. The publishing job consumes the verified artifact and uses
+the `crates-io` GitHub environment. Before enabling publication, configure that
+environment with required reviewers, prevent self-review, restrict deployment
+to `dev`, and store a crate-scoped `CARGO_REGISTRY_TOKEN` as an environment
+secret (never a repository secret). An environment name in YAML alone does not
+enforce approval; repository environment settings must supply that gate.
+The default dispatch only builds and verifies. No automatic tag or PyPI release
+is performed by this workflow.
